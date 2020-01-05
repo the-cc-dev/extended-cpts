@@ -1,6 +1,10 @@
 <?php
 
-class Extended_CPT_Test_Site_Requests extends Extended_CPT_Test_Site {
+namespace ExtCPTs\Tests\Sites;
+
+use ExtCPTs\Tests\Site;
+
+class Requests extends Site {
 
 	public function testSiteFilterQueryVarsRegistered() {
 
@@ -26,7 +30,7 @@ class Extended_CPT_Test_Site_Requests extends Extended_CPT_Test_Site {
 		$filters = array_keys( $this->args['hello']['admin_cols'] );
 		$found   = array_intersect( $filters, $wp->public_query_vars );
 
-		$this->assertEquals( array(), $found );
+		$this->assertSame( array(), $found );
 
 	}
 
@@ -36,7 +40,7 @@ class Extended_CPT_Test_Site_Requests extends Extended_CPT_Test_Site {
 
 		global $wp, $wp_query;
 
-		$this->assertEquals( array(), $wp->query_vars );
+		$this->assertSame( array(), $wp->query_vars );
 
 	}
 

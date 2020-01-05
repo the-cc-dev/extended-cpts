@@ -1,6 +1,11 @@
 <?php
 
-class Extended_CPT_Test_Site_Queries extends Extended_CPT_Test_Site {
+namespace ExtCPTs\Tests\Sites;
+
+use ExtCPTs\Tests\Site;
+use WP_Query;
+
+class Queries extends Site {
 
 	public function testDefaultPostTypeQueryNotAffected() {
 
@@ -141,7 +146,7 @@ class Extended_CPT_Test_Site_Queries extends Extended_CPT_Test_Site {
 
 		$query = $this->get_query( array(
 			'post_type'                       => 'hello',
-			'test_site_filters_post_meta_key' => 'Alpha',
+			'test_site_filters_post_meta_key' => '0',
 		) );
 
 		$meta_query = $query->get( 'meta_query' );
@@ -151,7 +156,7 @@ class Extended_CPT_Test_Site_Queries extends Extended_CPT_Test_Site {
 		$this->assertSame( '',              $query->get( 'meta_key' ) );
 		$this->assertSame( '',              $query->get( 'meta_value' ) );
 		$this->assertSame( 'test_meta_key', $meta_query[0]['key'] );
-		$this->assertSame( 'Alpha',         $meta_query[0]['value'] );
+		$this->assertSame( '0',             $meta_query[0]['value'] );
 
 		$this->assertEquals( array(
 			$this->posts['hello'][1],
@@ -236,14 +241,37 @@ class Extended_CPT_Test_Site_Queries extends Extended_CPT_Test_Site {
 
 		$meta_query = $query->get( 'meta_query' );
 
-		$this->assertEquals( 3, $query->found_posts );
+		$this->assertEquals( 2, $query->found_posts );
 
-		$this->assertSame( '',              $query->get( 'meta_key' ) );
-		$this->assertSame( '',              $query->get( 'meta_value' ) );
-		$this->assertSame( 'test_meta_key', $meta_query[0]['key'] );
-		$this->assertSame( 'NOT IN',        $meta_query[0]['compare'] );
+		$this->assertSame( '',                $query->get( 'meta_key' ) );
+		$this->assertSame( '',                $query->get( 'meta_value' ) );
+		$this->assertEquals( 'test_meta_key', $meta_query[0]['key'] );
+		$this->assertEquals( 'NOT IN',        $meta_query[0]['compare'] );
 
 		$this->assertEquals( array( '', '0', 'false', 'null' ), $meta_query[0]['value'] );
+
+		$this->assertEquals( array(
+			$this->posts['hello'][0],
+			$this->posts['hello'][2],
+		), wp_list_pluck( $query->posts, 'ID' ) );
+
+	}
+
+	public function testQueryFilteredByPostMetaKeyExists() {
+
+		$query = $this->get_query( array(
+			'post_type'                              => 'hello',
+			'test_site_filters_post_meta_key_exists' => 'test_meta_key',
+		) );
+
+		$meta_query = $query->get( 'meta_query' );
+
+		$this->assertEquals( 3, $query->found_posts );
+
+		$this->assertSame( '',                $query->get( 'meta_key' ) );
+		$this->assertSame( '',                $query->get( 'meta_value' ) );
+		$this->assertEquals( 'test_meta_key', $meta_query[0]['key'] );
+		$this->assertEquals( 'EXISTS',        $meta_query[0]['compare'] );
 
 		$this->assertEquals( array(
 			$this->posts['hello'][0],
@@ -251,6 +279,19 @@ class Extended_CPT_Test_Site_Queries extends Extended_CPT_Test_Site {
 			$this->posts['hello'][2],
 		), wp_list_pluck( $query->posts, 'ID' ) );
 
+	}
+
+	public function testQueryFilteredByPostDate() {
+		$query = $this->get_query( array(
+			'post_type'                   => 'hello',
+			'test_site_filters_date_from' => '2019-08-05',
+			'test_site_filters_date_to'   => '2019-08-08',
+		) );
+
+		$date_query = $query->get( 'date_query' );
+
+		$this->assertEquals( '2019-08-05', $date_query[0]['after'] );
+		$this->assertEquals( '2019-08-08', $date_query[1]['before'] );
 	}
 
 	public function testQueryNotFilteredWithoutRequiredCap() {

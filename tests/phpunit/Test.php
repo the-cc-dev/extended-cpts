@@ -1,6 +1,10 @@
 <?php
 
-abstract class Extended_CPT_Test extends WP_UnitTestCase {
+namespace ExtCPTs;
+
+abstract class Test extends \WP_UnitTestCase {
+
+	use \FalseyAssertEqualsDetector\Test;
 
 	public $cpts  = array();
 	public $taxos = array();
@@ -46,7 +50,12 @@ abstract class Extended_CPT_Test extends WP_UnitTestCase {
 				),
 				'test_site_filters_post_meta_exists' => array(
 					'meta_exists' => array(
-						'test_meta_key',
+						'test_meta_key' => 'Test',
+					),
+				),
+				'test_site_filters_post_meta_key_exists' => array(
+					'meta_key_exists' => array(
+						'test_meta_key' => 'Test',
 					),
 				),
 				'test_site_filters_with_cap' => array(
@@ -61,11 +70,11 @@ abstract class Extended_CPT_Test extends WP_UnitTestCase {
 						'type'    => 'CHAR',
 					),
 				),
-				'test_site_filters_post_meta_query_deprecated' => array(
-					'meta_key'     => 'test_meta_key',
-					'meta_compare' => '>=',
-					'meta_value'   => 'B',
-					'meta_type'    => 'CHAR',
+				'test_site_filters_date_from' => array(
+					'post_date' => 'after',
+				),
+				'test_site_filters_date_to' => array(
+					'post_date' => 'before',
 				),
 				'test_site_filters_invalid' => array(
 					'meta_query' => array(
@@ -154,9 +163,18 @@ abstract class Extended_CPT_Test extends WP_UnitTestCase {
 			'slug'     => 'faqs',
 		) );
 
+		$this->cpts['filterable'] = register_extended_post_type( 'filterable', array(
+			'site_filters' => array(
+				'test_site_filters_post_meta_key' => array(
+					'meta_key' => 'test_meta_key',
+					'default'  => 'Alpha',
+				),
+			),
+		) );
+
 		$wp_rewrite->flush_rules();
 
-		foreach ( array( 'Alpha', 'Beta', 'Gamma', 'Delta' ) as $slug ) {
+		foreach ( array( '0', 'Alpha', 'Beta', 'Gamma', 'Delta' ) as $slug ) {
 			wp_insert_term( $slug, 'hello_category' );
 			wp_insert_term( $slug, 'foo_category' );
 		}
@@ -185,7 +203,7 @@ abstract class Extended_CPT_Test extends WP_UnitTestCase {
 			'post_name' => 'Delta',
 			'post_date' => '1984-02-25 00:03:00'
 		) );
-		add_post_meta( $this->posts['hello'][1], 'test_meta_key', 'Alpha' );
+		add_post_meta( $this->posts['hello'][1], 'test_meta_key', '0' );
 
 		// Hello 2
 		$this->posts['hello'][2] = $this->factory->post->create( array(
@@ -239,6 +257,17 @@ abstract class Extended_CPT_Test extends WP_UnitTestCase {
 			'post_type'   => 'baz',
 		) );
 
+		$this->posts['filterable'][0] = $this->factory->post->create( array(
+			'guid'        => 'guid',
+			'post_type'   => 'filterable',
+		) );
+		add_post_meta( $this->posts['filterable'][0], 'test_meta_key', 'Alpha' );
+
+		$this->posts['filterable'][1] = $this->factory->post->create( array(
+			'guid'        => 'guid',
+			'post_type'   => 'filterable',
+		) );
+		add_post_meta( $this->posts['filterable'][1], 'test_meta_key', 'Beta' );
 	}
 
 	protected static function get_minimum_version( string $type, string $filename ) {
